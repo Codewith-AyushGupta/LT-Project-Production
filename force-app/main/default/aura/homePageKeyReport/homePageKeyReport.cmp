@@ -2,13 +2,18 @@
     <aura:attribute type="Key_Report__c[]" name="reportList"/>
     <aura:attribute name="type" type="String"/>
     <aura:attribute name="selectedRows" type="Object"/>
-    <aura:attribute name="selectedIds" type="List"/>
-    <aura:attribute name="maxRowSelection" type="Integer" default="5"/>
-    <aura:handler event="force:refreshView" action="{!c.init}" />
-    <aura:attribute name="mycolumns" type="List"/>
-    <aura:attribute name="kerridgeLinkdata" type="List"/>
+    <aura:attribute name="selectedIds" type="List"
+                    description="this Attribute use for store 
+                                 selected ids"/>
+    <aura:handler event="force:refreshView" action="{!c.init}" 
+                  description="this handler use for refresh page"/>
+    <aura:attribute name="reportColumns" type="List"
+                    description="this attribute use for store"/>
+    <aura:attribute name="reportdata" type="List"
+                    description="this attribute use for store Report data"/>
     <aura:attribute name="selectedReports" type="object[]"/>
-    <aura:attribute name="isShowModel" type="Boolean" default='false'/>
+    <aura:attribute name="isShowModel" type="Boolean" default='false'
+                    description="show all Master Report"/>
     <aura:handler name="init" value="{!this}" action="{!c.init}"/>
     <article class="slds-card" style="opacity:1;">
         <div class="slds-card__header slds-grid">
@@ -26,13 +31,13 @@
             <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
                 
                 <tbody >
-                    <aura:iteration items="{!v.kerridgeLinkdata}" var="item">
+                    <aura:iteration items="{!v.reportdata}" var="item">
                         
                         <tr class="slds-hint-parent">
                             <th data-label="Opportunity Name" scope="row">
                                 <div class="slds-truncate" title="Cloudhub">
                                     
-                                    <a href="{!item.Report_Url__c}" target="_blank" tabindex="-1">{!item.Name}</a>
+                                    <a href="{!item.Key_Report__r.Report_Url__c}" target="_blank" tabindex="-1">{!item.Key_Report__r.Name__c}</a>
                                 </div>
                             </th>
                         </tr> 
@@ -61,7 +66,7 @@
                         <div class="slds-p-around_medium slds-form slds-form_compound" >
                             <div style="height: 300px:width: 600px;">
                                 <lightning:datatable data="{! v.reportList }" 
-                                                     columns="{! v.mycolumns }" 
+                                                     columns="{! v.reportColumns }" 
                                                      keyField="Id"
                                                      onrowselection="{!c.handleSelect}"
                                                      selectedRows="{! v.selectedRows }"

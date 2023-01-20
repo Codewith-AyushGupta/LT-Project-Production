@@ -1,58 +1,68 @@
 ({
-
-    getkerridgeLinkData:function(component, event,helper){
-        var action = component.get('c.getKerridgeLinkRecord');
-       
-        action.setParams({ types : component.get("v.type") });
+    
+    getAllReportByLoginUser:function(component, event,helper){
+        var action = component.get('c.getAllReportByLoginUser');
+        
+        action.setParams({ reportType : component.get("v.type") });
         action.setCallback(this, function(response) {
             var state = response.getState();
             if (state === "SUCCESS") {
                 
-                var arr=[];
+                var setOfIds=[];
                 var records = response.getReturnValue();
-                //alert(JSON.stringify(records));
-                component.set('v.kerridgeLinkdata', records);
-                   records.forEach(function(record) {
-                       if(record.Id !=undefined){
-                          
-                          arr.push(record.Id); 
-                       }
-                   
-                });  
-              //alert('getkerridgeLinkData',arr);
+                if(records != null){
+                    component.set('v.reportdata', records);
+                    records.forEach(function(record) {
+                        if(record.Key_Report__r.Id !=undefined){
+                            setOfIds.push(record.Key_Report__r.Id); 
+                        }
+                        
+                    });  
+                    component.set('v.selectedIds',setOfIds); 
+                }
                 
-                component.set('v.selectedIds',arr);
-              
             }            
             
         });
         
         $A.enqueueAction(action);
-          
+        
     },
-        fetchKerridgeReports : function(component, event,helper) {
-
-        var action = component.get('c.getKerridgeReports');
-        action.setParams({ types : component.get("v.type") });
+    fetchAllMasterReports : function(component, event,helper) {
+        
+        var action = component.get('c.getAllMasterReports');
+        action.setParams({ reportType : component.get("v.type") });
         action.setCallback(this, function(response) {
             var state = response.getState();
             if (state === "SUCCESS") {
                 var records = response.getReturnValue();
-                records.forEach(function(record) {
-                    record.linkName = '/' + record.Id;
-                    record.checked=true;
-                });   
-                component.set('v.reportList', records);
-                var selectedIds=component.get('v.selectedIds');
-             //alert(selectedIds);
-            component.set("v.selectedRows",selectedIds);
-                
-            }          //00O2C000000U8eXUAS
-
+                if(records != null){
+                    records.forEach(function(record) {
+                        record.linkName = '/' + record.Id;
+                        record.checked=true;
+                    });   
+                    component.set('v.reportList', records);
+                    var selectedIds=component.get('v.selectedIds');
+                    component.set("v.selectedRows",selectedIds);
+                }     
+            }          
+            
         });
         
         $A.enqueueAction(action);
         
-},
+    },
+    getRecordType:function(component, event, helper){
+        var action = component.get("c.getRecorTypes");
+        action.setCallback(this, function(response) {
+            var state = response.getState();
+            if (state === "SUCCESS") {
+                var value=response.getReturnValue();
+                component.set("v.type",value.Key_Reports); 
+                helper.getAllReportByLoginUser(component, event,helper);      
+            }
+        });
+        $A.enqueueAction(action);
+    },
     
 })
