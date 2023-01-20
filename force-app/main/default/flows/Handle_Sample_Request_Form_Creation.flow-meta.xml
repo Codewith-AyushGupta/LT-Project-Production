@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Decor_24_Form_Create</name>
+        <label>Decor 24 Form Create</label>
+        <locationX>374</locationX>
+        <locationY>575</locationY>
+        <actionName>Sample_Request_Form__c.Decor_24_Form_Creation_notification</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <actionCalls>
+        <name>Sample_Request_Form_Created</name>
+        <label>Sample Request Form Created</label>
+        <locationX>110</locationX>
+        <locationY>575</locationY>
+        <actionName>Sample_Request_Form__c.Sample_Request_Form_Creation_notification</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <actionCalls>
+        <name>Website_Form_create</name>
+        <label>Website Form create</label>
+        <locationX>638</locationX>
+        <locationY>575</locationY>
+        <actionName>Sample_Request_Form__c.WebSite_Form_Creation_notification</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <apiVersion>54.0</apiVersion>
+    <decisions>
+        <name>Check_Status</name>
+        <label>Check Status</label>
+        <locationX>176</locationX>
+        <locationY>335</locationY>
+        <defaultConnector>
+            <targetReference>InProgress</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Non Submitted Status</defaultConnectorLabel>
+        <rules>
+            <name>Submitted</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Sample_Request_Form_Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Submitted</stringValue>
+                </rightValue>
+            </conditions>
+            <label>Submitted</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>InProgress</name>
+        <label>InProgress</label>
+        <locationX>506</locationX>
+        <locationY>455</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Save_as_Draft_for_Internal_Form</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Sample_Request_Form_Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Save as Draft</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.RecordType.DeveloperName</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>InternalEmployee</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Sample_Request_Form_Created</targetReference>
+            </connector>
+            <label>Save as Draft for Internal Form</label>
+        </rules>
+        <rules>
+            <name>Save_as_Draft_for_Decor_24</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.RecordType.DeveloperName</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Decor24_Samples</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Sample_Request_Form_Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Save as Draft</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Decor_24_Form_Create</targetReference>
+            </connector>
+            <label>Save as Draft for Decor 24</label>
+        </rules>
+        <rules>
+            <name>Save_as_Draft_for_Website_Form</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.RecordType.DeveloperName</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Website_Samples</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Sample_Request_Form_Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Save as Draft</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Website_Form_create</targetReference>
+            </connector>
+            <label>Save as Draft for Website Form</label>
+        </rules>
+    </decisions>
+    <description>This flow will fire when a new record is created</description>
+    <environments>Default</environments>
+    <interviewLabel>Handle Sample Request Form Creation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Handle Sample Request Form Creation</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Status</targetReference>
+        </connector>
+        <object>Sample_Request_Form__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>submittedby</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+</Flow>
