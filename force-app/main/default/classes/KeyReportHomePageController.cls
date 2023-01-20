@@ -1,124 +1,82 @@
 public class KeyReportHomePageController {
-    
     @AuraEnabled
-    public static List<Report> getReports(){
-        return ReportSelector.getReportByFolderName();
-    }
-    
-  
-    
-    @AuraEnabled
-    public static List<Key_Report__c> getKeyReportRecords(String  types){
-        List<Key_Report__c> keyReports=KeyReportSelector.getKeyReportRecordsByTypeAndLoginUser(types);
-        try{
-            return keyReports; 
+    public static Map<String,String> getRecorTypes(){
+        Map<String,String> metadataValueByMetadataName= new Map<String,String>();       
+        for(LouisvilleConfiguration__mdt louisvilleConfigurationRecord : LouisvilleConfigurationSelector.getRecordsByCategory(new Set<String>{System.Label.Key_Report_Type})){
+            metadataValueByMetadataName.put(louisvilleConfigurationRecord.Name__c,louisvilleConfigurationRecord.Value__c);
         }
-        catch(Exception e) {
-            System.debug('An exception occurred: ' + e.getMessage());
-            ExceptionUtils.createExceptionLog('KeyReportHomePageController - getKeyReportRecords',e.getMessage(),e.getStackTraceString());
-            return keyReports; 
-        }        
+        return metadataValueByMetadataName;      
+        
     }
-    
     @AuraEnabled
-    public static List<Key_Report__c> getKerridgeLinkRecord(String  types){
-        List<Key_Report__c> keyreports=KeyReportSelector.getKerridgeLinkByTypeAndLoginUser(types);
+    // get all key report by login user
+    // inspect the situation If the size of the get report is zero, return null; otherwise, return the return report list.
+    public static  List<Key_Report_Assignment__c> getAllReportByLoginUser(String  reportType){
+        List<Key_Report_Assignment__c> keyreports=KeyReportSelector.getKeyReportAssignmentByReportTypeAndLoginUser(reportType);
         try{
             if(keyreports.size()==0){
-                return KeyReportSelector.getKerridgeLinkByType(types); 
+                return null; 
             }else{
-                return KeyReportSelector.getKerridgeLinkRecordsByTypeAndLoginUser(types);
+                return KeyReportSelector.getKeyReportAssignmentByReportTypeAndLoginUser(reportType);
             }  
         }
         catch(Exception e) {
             System.debug('An exception occurred: ' + e.getMessage());
             ExceptionUtils.createExceptionLog('KeyReportHomePageController - getKerridgeLinkRecord',e.getMessage(),e.getStackTraceString());
-            return KeyReportSelector.getKerridgeLinkRecordsByTypeAndLoginUser(types);
+            return null;
         }
         
     }
-    
+    // get all master report
     @AuraEnabled
-    public static List<Key_Report__c> getKerridgeReports(String  types){
-        List<Key_Report__c> keyreports=KeyReportSelector.getKerridgeLinkByTypeAndLoginUser(types);
-        try{
-            if(keyreports.size()==0){
-                return KeyReportSelector.getKerridgeLinkByType(types);
-            }else{
-                return KeyReportSelector.getKerridgeLinkRecordsByTypeAndLoginUserOrderBy(types);
-            }
-        }
-        catch(Exception e) {
-            System.debug('An exception occurred: ' + e.getMessage());
-            ExceptionUtils.createExceptionLog('KeyReportHomePageController - getKerridgeReports',e.getMessage(),e.getStackTraceString());
-            return KeyReportSelector.getKerridgeLinkRecordsByTypeAndLoginUserOrderBy(types);
-        }        
+    public static List<Key_Report__c> getAllMasterReports(String  reportType){
+        return KeyReportSelector.getAllMasterRecordByType(reportType);
     }
     
     @AuraEnabled
-    public static List<Key_Report__c> saveKerridgeReports(String ReportRecord ,List<String> unselecteIds,List<String> selectedIds,String types){
-        Set<Id> selectIds=new Set<Id>();
-        Set<Id> unselectIds=new Set<Id>();
-        List<Key_Report__c> keyreportsForInsert=new List<Key_Report__c>();
-        List<Key_Report__c> keyreportsForUpdate=new List<Key_Report__c>();
-        for(String ids:unselecteIds){
-            unselectIds.add(ids);
+    public static void saveKerridgeReports(List<String> unSelectedIds,List<String> selectedIds,String  reportType){
+        //Store unique Record Id for insert
+        Set<Id> keyReportIdsToBeInsert=new Set<Id>();
+        //Store unique Record Id for Delete
+        Set<Id> keyReportIdsToBeDelete=new Set<Id>();
+        // This map stores exciting records based on the login user.
+        Map<Id,Key_Report_Assignment__c> keyReportAssignmentsByKeyReportId=new Map<Id,Key_Report_Assignment__c>();
+        //This list is used to store new records for inserts.
+        List<Key_Report_Assignment__c> keyReportsAssignmentsToBeInsert=new List<Key_Report_Assignment__c>();
+           //This list is used to store new records for delete.
+        List<Key_Report_Assignment__c> keyReportsAssignmentsToBeDelete=new List<Key_Report_Assignment__c>();
+        for(String ids:unSelectedIds){
+            keyReportIdsToBeDelete.add(ids);
         }
         for(String ids:selectedIds){
-            selectIds.add(ids);
+            keyReportIdsToBeInsert.add(ids);
         }
-        List<Key_Report__c> kerridgeLink=(List<Key_Report__c>)System.JSON.deserialize(ReportRecord, List<Key_Report__c>.class);
-        List<Key_Report__c> keyreports=KeyReportSelector.getKerridgeLinkByTypeAndLoginUser(types);
-        if(keyreports.size()==0){
-            for(Key_Report__c kreport:kerridgeLink){
-                Key_Report__c record=new Key_Report__c();
-                if(selectIds.contains(kreport.Id)){
-                    record.Name=kreport.Name;
-                    record.Report_Url__c=kreport.Report_Url__c;
-                    record.Type__c=types;
-                    record.User__c=userInfo.getUserId();
-                    record.Active__c=true;
-                    keyreportsForInsert.add(record);
-                }
-                if(unselectIds.contains(kreport.Id)){
-                    record.Name=kreport.Name;
-                    record.Report_Url__c=kreport.Report_Url__c;
-                    record.Type__c=types;
-                    record.User__c=userInfo.getUserId();
-                    record.Active__c=false;
-                    keyreportsForInsert.add(record);
-                }
-            }
-            
-        }else{
-             
-            for(Id Ids:selectIds){
-                Key_Report__c record=new Key_Report__c();
-                record.Id=Ids;
-                record.Active__c=true;
-                keyreportsForUpdate.add(record);
-            }
-            for(Id Ids:unselectIds){
-                Key_Report__c record=new Key_Report__c();
-                record.Id=Ids;
-                record.Active__c=false;
-                keyreportsForUpdate.add(record);
-            }
-           
+        //Obtain all Key Report Assignments Based On Report Type And Login User
+        for(Key_Report_Assignment__c keyRAssign:KeyReportSelector.getKeyReportAssignmentByReportTypeAndLoginUser(reportType)){
+            keyReportAssignmentsByKeyReportId.put(keyRAssign.Key_Report__c,keyRAssign);
         }
+        for(Id keyReportId:keyReportIdsToBeInsert){
+            if(!keyReportAssignmentsByKeyReportId.containsKey(keyReportId)){
+                Key_Report_Assignment__c kRAssignment=new Key_Report_Assignment__c ();
+                kRAssignment.Key_Report__c=keyReportId;
+                kRAssignment.User__c=userInfo.getUserId();
+                keyReportsAssignmentsToBeInsert.add(kRAssignment);
+            }
+        }
+        
+        keyReportsAssignmentsToBeDelete=KeyReportSelector.getKeyReportsAssignmentsByKeyReportidsAndTypeAndLoginUser(keyReportIdsToBeDelete,reportType);
         try{
-            if(!keyreportsForInsert.isEmpty()){
-                Insert keyreportsForInsert;
+            if(!keyReportsAssignmentsToBeInsert.isEmpty()){
+                insert keyReportsAssignmentsToBeInsert; 
             }
-            if(!keyreportsForUpdate.isEmpty()){
-                update keyreportsForUpdate;
-                
+            system.debug('keyReportAssignments=============>'+keyReportsAssignmentsToBeDelete);
+            if(!keyReportsAssignmentsToBeDelete.isEmpty()){
+                delete keyReportsAssignmentsToBeDelete;
             }
-        }
-        catch(Exception e) {
+        }catch(Exception e) {
             System.debug('An exception occurred: ' + e.getMessage());
-            ExceptionUtils.createExceptionLog('KeyReportHomePageController - getKerridgeReports',e.getMessage(),e.getStackTraceString());
-        }            
-        return keyreportsForInsert;
-    }
+            ExceptionUtils.createExceptionLog('KeyReportHomePageController - saveKerridgeReports',e.getMessage(),e.getStackTraceString());
+            
+        }
+    }     
 }
